@@ -1,0 +1,107 @@
+---
+title: "Don't Judge a Book by its Size"
+author: "Luz Villa"
+date: "05/01/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(plotly)
+library(dplyr)
+library(plyr)
+library(tidyverse)
+
+load("BookClubData.Rda")
+load("AllData.Rda")
+load("Reads.Rda")
+
+BookClubData["Genre"][BookClubData["Genre"] == "Thriller"] = "Mystery-Thriller"
+
+AllData["Genre"][AllData["Genre"] == "memoir-autobiography"] = "Autobiography"
+
+Reads = Reads[-c(20),]
+
+```
+
+## Motivation and Background
+
+Is there an optimal length for a book? We always hear of judging a book by its cover, but what about judging one based on its size? It could be intimidating if a book is took long, or if it's too short, we may deem it unworthy to buy. During my previous research project, I noticed some loose trends in the number of people who read a book in correlation with the number of pages it had (i.e. more people reading romance versus fantasy) and I was curious to see if page count potentially discourages people from picking up a book and taking it home. 
+
+
+The average length of a novel is between 60,000 and 110,000 words; and the mean number of words per page is approximately 250. therefore, the typical number of pages in a book is 240-440. My research also revealed that publishers require a certain word count depending on the genre in order to consider publishing a book.The industry standards for each genre can be found below:
+
+* Autobiography/Memoir: 180 - 320 pages
+* Fantasy/Science fiction: 360 - 480 pages
+* Fiction: 160 - 400 pages
+* Horror: 200 - 320 pages
+* Mystery/Crime/Thrillers: 240 - 360 pages
+* Romance: 200 - 400 pages
+* Young adult fiction: 160 - 320 pages
+
+
+
+## Data
+The data used in this analysis was collected from [Goodreads](https://www.goodreads.com/) using the sample populations of four of the most popular book clubs in the United States: Book of the Month, Hello Sunshine, Oprah's Book Club, Goodreads, and GMA Book Club. 
+From this sample, the genre, year the book was published, and page count were utilized to create the below graphs and data summaries. 
+
+
+#### 
+```{r analysis, results = "asis", echo=FALSE, warning = FALSE}
+
+AvgPC = BookClubData %>% dplyr::group_by(Genre) %>% 
+  dplyr::summarize(Pages = round(mean(PageCount)), 
+                   SD = round(sd(PageCount),digits = 2))
+
+AvgR = Reads %>% dplyr::group_by(Genre) %>% dplyr::summarize(Reads = round(mean(TotalRatings)))
+
+AvgPC = cbind(AvgPC, AvgR[,2])
+
+AvgPC %>% knitr::kable(caption = "Table 1: Average Page Count and Number of Reads by Genre")
+
+
+```
+
+```{r bar graphs, echo=FALSE, warning = FALSE}
+
+plot_ly(AvgPC, x = ~Genre, y = ~Pages, name = "Average Pages", mode = "markers", color= ~Genre) %>%
+    layout(title = "Graph 1: Average Number of Pages", showlegend = FALSE)
+  
+  plot_ly(AvgR, x = ~Genre, y = ~Reads, name = "Average Reads", mode = "markers", color= ~Genre) %>%
+   layout(title = "Graph 2: Average Number of Readers", showlegend = FALSE)
+```
+
+```{r plot, echo=FALSE, warning=FALSE}
+
+
+
+plot_ly(BookClubData, x = ~Genre, y = ~PageCount, color= ~Genre, type = "box", 
+        height = 1000) %>% layout( yaxis = list( range=c(100,750))) %>%
+              layout(showlegend = FALSE) %>%
+  layout(title = "Graph 3: Boxplot of Page Count by Genre", showlegend = FALSE)
+
+
+```
+
+
+```{r plot1, echo=FALSE, warning=FALSE}
+
+
+
+plot_ly(BookClubData, x = ~BookClub, y = ~PageCount, color= ~BookClub, type = "box", 
+        height = 1000) %>% layout( yaxis = list( range=c(100,700))) %>%
+              layout(showlegend = FALSE) %>%
+  layout(title = "Graph 4: Boxplot of Page Count by Book Club")
+
+
+```
+
+
+## Conclusion, Limitations, and Improvements 
+
+In conclusion, the average page count found in this data sample is on par with the industry standards; however, there is was a negative correlation noticed in which the genre with the higher page count was read less often in comparison with genres of lower page counts.  
+
+One of the main limitations in this project was the sample size in correlation to each of the genres. For example there were only 16 autobiographical books compared to fiction which had a sample size of 337. If this project were to be done again, there would be a minimum sample size of 100 books per genre. This will help limit the variance in the size of each box plot in Graph 3, as well as add more confidence to the standard deviation seen in Table 1. 
+
+This project has the capacity to potentially be useful to publishers in determining if they should divide a book into several parts and make it a series. This not only makes it more profitable but will also provide a greater probability of consumers buying it. A way to possibly analyze and improve this project would be to bring in a data point that reveals if this book was in a series, and analyze the amount of time it takes for the sequential book to be released.
